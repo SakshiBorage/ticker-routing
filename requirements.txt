@@ -3,4 +3,6 @@ langchain-openai
 python-dotenv
 ipykernel
 pydantic
-tiktoken
+fastapi
+uvicorn[standard]
+
