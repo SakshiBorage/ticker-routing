@@ -1,0 +1,149 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skyfarer Air — Admin Review</title>
+<link rel="stylesheet" href="admin.css">
+</head>
+<body>
+
+  <header class="topbar">
+    <div class="brand">
+      <span class="brand-mark">✈</span>
+      <span class="brand-name">Skyfarer<span class="brand-name-accent">Air</span></span>
+      <span class="brand-divider">/</span>
+      <span class="brand-page">Admin</span>
+    </div>
+    <div class="topbar-stats">
+      <div class="stat-pill">
+        <span class="stat-pill-value" id="stat-total">0</span>
+        <span class="stat-pill-label">Total</span>
+      </div>
+      <div class="stat-pill stat-pill-pending">
+        <span class="stat-pill-value" id="stat-pending">0</span>
+        <span class="stat-pill-label">Pending</span>
+      </div>
+      <div class="stat-pill stat-pill-verified">
+        <span class="stat-pill-value" id="stat-verified">0</span>
+        <span class="stat-pill-label">Verified</span>
+      </div>
+    </div>
+  </header>
+
+  <main class="page">
+
+    <div class="page-heading">
+      <h1>Ticket Review Queue</h1>
+      <p>Verify or correct AI-classified support tickets before they route to a team.</p>
+    </div>
+
+    <div class="toolbar">
+      <div class="search-box">
+        <span class="search-icon">&#128269;</span>
+        <input id="search-input" type="text" placeholder="Search ticket, team, or ID...">
+      </div>
+
+      <div class="filter-tabs" id="filter-tabs">
+        <button class="filter-tab active" data-filter="all">All</button>
+        <button class="filter-tab" data-filter="pending">Pending</button>
+        <button class="filter-tab" data-filter="verified">Verified</button>
+      </div>
+
+      <select id="priority-select">
+        <option value="all">All priorities</option>
+        <option value="High">High</option>
+        <option value="Medium">Medium</option>
+        <option value="Low">Low</option>
+      </select>
+
+      <select id="sort-select">
+        <option value="date-desc">Newest first</option>
+        <option value="date-asc">Oldest first</option>
+        <option value="priority-desc">Priority: High → Low</option>
+        <option value="priority-asc">Priority: Low → High</option>
+        <option value="status">Status: pending first</option>
+      </select>
+    </div>
+
+    <div class="table-wrap">
+      <table class="ticket-table">
+        <thead>
+          <tr>
+            <th class="sortable" data-sort="id">ID</th>
+            <th>Ticket</th>
+            <th class="sortable" data-sort="category">Category</th>
+            <th class="sortable" data-sort="priority">Priority</th>
+            <th>Team</th>
+            <th class="sortable" data-sort="status">Status</th>
+            <th class="sortable" data-sort="date">Submitted</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="ticket-tbody"></tbody>
+      </table>
+      <p id="empty-state" class="empty-state hidden">No tickets match the current filters.</p>
+    </div>
+
+  </main>
+
+  <!-- review side panel -->
+  <div id="overlay" class="overlay hidden"></div>
+  <aside id="review-panel" class="review-panel hidden">
+    <div class="review-header">
+      <h2>Review Ticket <span id="review-id">#—</span></h2>
+      <button id="panel-close" class="icon-btn" aria-label="Close">&times;</button>
+    </div>
+
+    <div class="review-body">
+      <div class="field-group">
+        <label class="field-label">Original Ticket Text</label>
+        <textarea id="field-input" rows="5" readonly></textarea>
+      </div>
+
+      <div class="field-row">
+        <div class="field-group">
+          <label class="field-label">Category</label>
+          <select id="field-category"></select>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Priority</label>
+          <select id="field-priority">
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+          </select>
+        </div>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Assigned Team</label>
+        <select id="field-team"></select>
+        <span class="field-hint">Auto-filled from category, editable if needed.</span>
+      </div>
+
+      <div class="field-group">
+        <label class="field-label">Reasoning</label>
+        <textarea id="field-reasoning" rows="4"></textarea>
+      </div>
+
+      <div class="field-group meta-row">
+        <span class="field-label">Submitted</span>
+        <span id="field-created" class="meta-value">—</span>
+      </div>
+    </div>
+
+    <div class="review-footer">
+      <span class="field-hint">Saving marks this ticket as verified.</span>
+      <div class="review-actions">
+        <button id="btn-cancel" class="btn btn-ghost">Cancel</button>
+        <button id="btn-save" class="btn btn-primary">Verify &amp; Save</button>
+      </div>
+    </div>
+  </aside>
+
+  <div id="toast" class="toast hidden"></div>
+
+  <script src="admin.js"></script>
+</body>
+</html>
