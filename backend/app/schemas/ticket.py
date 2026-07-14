@@ -4,24 +4,25 @@ from typing import Literal
 from pydantic import BaseModel, field_validator
 
 CATEGORY_TEAM_MAP = {
-    "order_issue": "Order Management",
-    "delivery_logistics": "Logistics & Delivery Ops",
-    "returns_refunds": "Returns & Refunds Team",
+    "flight_disruption": "Flight Operations & Rebooking",
+    "baggage": "Baggage Services",
+    "reservations_ticketing": "Reservations & Ticketing",
+    "refunds_compensation": "Refunds & Compensation",
     "payments_billing": "Payments & Billing",
-    "product_issue": "Product Quality Support",
+    "loyalty_program": "Loyalty Program Team",
     "account_access": "Account & Identity Support",
-    "wallet_offers": "Rewards & Promotions",
-    "seller_related": "Marketplace Trust",
-    "warranty_installation": "Warranty & Installation",
-    "technical_platform": "Platform Engineering",
+    "special_assistance": "Accessibility & Special Services",
+    "discrimination_complaint": "Legal & Compliance",
     "fraud_security": "Trust & Security",
-    "feedback_complaints": "Customer Experience",
+    "safety_incident": "Safety & Compliance",
+    "technical_platform": "Platform Engineering",
+    "feedback_complaints": "Customer Relations",
     "general_inquiry": "Customer Support Desk",
 }
 
 FALLBACK_RESULT = {
     "category": "general_inquiry",
-    "priority": "Medium",
+    "priority": "Low",
     "assigned_team": "Customer Support Desk",
     "reasoning": "Automated classification failed validation; routed to general queue for manual review.",
 }

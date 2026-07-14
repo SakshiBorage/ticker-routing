@@ -3,39 +3,57 @@ import json
 from langchain_core.messages import AIMessage, HumanMessage, SystemMessage
 from pydantic import ValidationError
 
-from app.config import llm
 from app.prompts.classification_prompt import SYSTEM_MESSAGE
 from app.schemas.ticket import FALLBACK_RESULT, parse_and_validate
+from app.services.resilience import API_FAILURE_RESULT, PermanentFailure, TemporaryFailure, robust_invoke
 from app.services.validation import validate_input
 
 
 def build_messages(ticket: str):
-    return [
+    print(f"[build_messages] called with ticket={ticket!r}")
+    result = [
         SystemMessage(content=SYSTEM_MESSAGE),
         HumanMessage(
             content=f'Input: "{ticket}"\nOutput:'
         ),
     ]
+    print(f"[build_messages] output: {result!r}")
+    return result
 
 
 def classify_ticket(ticket: str) -> dict:
+    print(f"[classify_ticket] called with ticket={ticket!r}")
     clean_ticket = validate_input(ticket)
 
     messages = build_messages(clean_ticket)
 
-    response = llm.invoke(messages)
+    try:
+        response = robust_invoke(messages)
+    except (TemporaryFailure, PermanentFailure):
+        print("[classify_ticket] output: API_FAILURE_RESULT")
+        return dict(API_FAILURE_RESULT)
 
-    return json.loads(response.content)
+    result = json.loads(response.content)
+    print(f"[classify_ticket] output: {result!r}")
+    return result
 
 
 def robust_classify_ticket(ticket: str) -> dict:
+    print(f"[robust_classify_ticket] called with ticket={ticket!r}")
     clean_ticket = validate_input(ticket)
     messages = build_messages(clean_ticket)
 
     # Attempt 1
-    raw_output = llm.invoke(messages).content
     try:
-        return parse_and_validate(raw_output).model_dump()
+        raw_output = robust_invoke(messages).content
+    except (TemporaryFailure, PermanentFailure):
+        print("[robust_classify_ticket] output: API_FAILURE_RESULT")
+        return dict(API_FAILURE_RESULT)
+
+    try:
+        result = parse_and_validate(raw_output).model_dump()
+        print(f"[robust_classify_ticket] output: {result!r}")
+        return result
     except (json.JSONDecodeError, ValidationError) as first_error:
         pass
 
@@ -51,11 +69,19 @@ def robust_classify_ticket(ticket: str) -> dict:
             )
         ),
     ]
-    raw_output_retry = llm.invoke(retry_messages).content
     try:
-        return parse_and_validate(raw_output_retry).model_dump()
+        raw_output_retry = robust_invoke(retry_messages).content
+    except (TemporaryFailure, PermanentFailure):
+        print("[robust_classify_ticket] output: API_FAILURE_RESULT")
+        return dict(API_FAILURE_RESULT)
+
+    try:
+        result = parse_and_validate(raw_output_retry).model_dump()
+        print(f"[robust_classify_ticket] output: {result!r}")
+        return result
     except (json.JSONDecodeError, ValidationError):
         pass
 
     # Both attempts failed validation -> safe fallback
+    print("[robust_classify_ticket] output: FALLBACK_RESULT")
     return dict(FALLBACK_RESULT)

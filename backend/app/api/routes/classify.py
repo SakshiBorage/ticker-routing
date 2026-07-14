@@ -9,16 +9,24 @@ router = APIRouter(prefix="/tickets", tags=["tickets"])
 @router.post("/classify")
 def classify(request: TicketRequest):
     """Raw pipeline: validate -> preprocess -> classify (no output validation/retry)."""
+    print(f"[classify] called with request={request!r}")
     try:
-        return classify_ticket(request.ticket)
+        result = classify_ticket(request.ticket)
     except ValueError as error:
+        print(f"[classify] output: raising HTTPException 400: {error!r}")
         raise HTTPException(status_code=400, detail=str(error))
+    print(f"[classify] output: {result!r}")
+    return result
 
 
 @router.post("/classify/validated")
 def classify_validated(request: TicketRequest):
     """Robust pipeline: validate -> preprocess -> classify -> validate output -> retry -> fallback."""
+    print(f"[classify_validated] called with request={request!r}")
     try:
-        return robust_classify_ticket(request.ticket)
+        result = robust_classify_ticket(request.ticket)
     except ValueError as error:
+        print(f"[classify_validated] output: raising HTTPException 400: {error!r}")
         raise HTTPException(status_code=400, detail=str(error))
+    print(f"[classify_validated] output: {result!r}")
+    return result
