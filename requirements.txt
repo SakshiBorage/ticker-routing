@@ -1,1 +1,10 @@
+
+langchain
+langchain-openai
+langchain-groq
+python-dotenv
+ipykernel
+pydantic
 fastapi
+uvicorn[standard]
+
