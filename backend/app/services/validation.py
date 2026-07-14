@@ -14,7 +14,7 @@ def has_readable_text(ticket: str) -> bool:
     those (e.g. "12345", "!!!???", "😀😭🔥") has no alphabetic character
     and is treated as unreadable.
     """
-    print(f"[has_readable_text] called with ticket={ticket!r}")
+    print("[has_readable_text] called")
     result = any(ch.isalpha() for ch in ticket)
     print(f"[has_readable_text] output: {result!r}")
     return result
@@ -24,7 +24,7 @@ def validate_input(ticket: str) -> str:
     """
     Validate and normalize the incoming support ticket.
     """
-    print(f"[validate_input] called with ticket={ticket!r}")
+    print("[validate_input] called")
 
     if ticket is None or not ticket.strip():
         raise ValueError(

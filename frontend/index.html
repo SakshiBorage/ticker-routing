@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Skyfarer Air — Support</title>
+<link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <div class="sky">
+    <div class="cloud cloud-1"></div>
+    <div class="cloud cloud-2"></div>
+    <div class="cloud cloud-3"></div>
+    <div class="cloud cloud-4"></div>
+    <div class="plane-trail">
+      <span class="plane">✈</span>
+    </div>
+  </div>
+
+  <header class="brand-bar">
+    <div class="brand">
+      <span class="brand-mark">✈</span>
+      <span class="brand-name">Skyfarer<span class="brand-name-accent">Air</span></span>
+    </div>
+    <span class="brand-tagline">Customer Support</span>
+  </header>
+
+  <main class="page">
+    <div class="card">
+      <p class="eyebrow">We're here to help</p>
+      <h1>How can we get you back on track?</h1>
+      <p class="subtitle">Tell us what happened with your trip and we'll route it to the right team.</p>
+
+      <form id="ticket-form">
+        <label for="ticket-input" class="field-label">Your ticket</label>
+        <textarea
+          id="ticket-input"
+          placeholder="e.g. My flight SF204 was cancelled and I'd like a refund..."
+          rows="6"
+          required
+        ></textarea>
+
+        <button type="submit" id="submit-btn">
+          <span class="btn-label">Submit Ticket</span>
+          <span class="btn-icon">✈</span>
+        </button>
+      </form>
+    </div>
+
+    <p class="footnote">Skyfarer Air &middot; Fly further, worry less.</p>
+  </main>
+
+  <div id="notification" class="notification hidden">
+    <span id="notification-message"></span>
+    <button id="notification-close" aria-label="Dismiss">&times;</button>
+  </div>
+
+  <script src="script.js"></script>
+</body>
+</html>

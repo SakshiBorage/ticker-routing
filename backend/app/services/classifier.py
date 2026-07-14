@@ -10,19 +10,18 @@ from app.services.validation import validate_input
 
 
 def build_messages(ticket: str):
-    print(f"[build_messages] called with ticket={ticket!r}")
+    print("[build_messages] called")
     result = [
         SystemMessage(content=SYSTEM_MESSAGE),
         HumanMessage(
             content=f'Input: "{ticket}"\nOutput:'
         ),
     ]
-    print(f"[build_messages] output: {result!r}")
     return result
 
 
 def classify_ticket(ticket: str) -> dict:
-    print(f"[classify_ticket] called with ticket={ticket!r}")
+    print("[classify_ticket] called")
     clean_ticket = validate_input(ticket)
 
     messages = build_messages(clean_ticket)
@@ -39,7 +38,7 @@ def classify_ticket(ticket: str) -> dict:
 
 
 def robust_classify_ticket(ticket: str) -> dict:
-    print(f"[robust_classify_ticket] called with ticket={ticket!r}")
+    print("[robust_classify_ticket] called")
     clean_ticket = validate_input(ticket)
     messages = build_messages(clean_ticket)
 

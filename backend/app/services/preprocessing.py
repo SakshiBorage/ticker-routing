@@ -8,7 +8,7 @@ _tokenizer = tiktoken.encoding_for_model("gpt-4o-mini")
 
 
 def count_tokens(text: str) -> int:
-    print(f"[count_tokens] called with text={text!r}")
+    print("[count_tokens] called")
     result = len(_tokenizer.encode(text))
     print(f"[count_tokens] output: {result!r}")
     return result
@@ -16,7 +16,7 @@ def count_tokens(text: str) -> int:
 
 def summarize_ticket(ticket_text: str) -> str:
     """Summarize a long ticket using a cheap LLM call before classification."""
-    print(f"[summarize_ticket] called with ticket_text={ticket_text!r}")
+    print("[summarize_ticket] called")
     messages = [
         SystemMessage(content=SUMMARIZE_SYSTEM_MESSAGE),
         HumanMessage(content=ticket_text),
@@ -29,7 +29,7 @@ def summarize_ticket(ticket_text: str) -> str:
 
 def preprocess_ticket_text(ticket_text: str) -> str:
     """Pass short tickets through unchanged; summarize tickets over TOKEN_THRESHOLD tokens."""
-    print(f"[preprocess_ticket_text] called with ticket_text={ticket_text!r}")
+    print("[preprocess_ticket_text] called")
     if count_tokens(ticket_text) <= TOKEN_THRESHOLD:
         print("[preprocess_ticket_text] output: unchanged (under token threshold)")
         return ticket_text

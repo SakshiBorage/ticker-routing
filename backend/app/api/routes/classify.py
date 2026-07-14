@@ -9,7 +9,7 @@ router = APIRouter(prefix="/tickets", tags=["tickets"])
 @router.post("/classify")
 def classify(request: TicketRequest):
     """Raw pipeline: validate -> preprocess -> classify (no output validation/retry)."""
-    print(f"[classify] called with request={request!r}")
+    print("[classify] called")
     try:
         result = classify_ticket(request.ticket)
     except ValueError as error:
@@ -22,7 +22,7 @@ def classify(request: TicketRequest):
 @router.post("/classify/validated")
 def classify_validated(request: TicketRequest):
     """Robust pipeline: validate -> preprocess -> classify -> validate output -> retry -> fallback."""
-    print(f"[classify_validated] called with request={request!r}")
+    print("[classify_validated] called")
     try:
         result = robust_classify_ticket(request.ticket)
     except ValueError as error:

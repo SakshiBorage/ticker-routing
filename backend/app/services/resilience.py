@@ -30,7 +30,7 @@ def classify_llm_error(exc: Exception) -> str:
     integration - OpenAI, Groq, etc. - raises errors modeled the same way,
     so this works across whichever provider the factory created.
     """
-    print(f"[classify_llm_error] called with exc={exc!r}")
+    print("[classify_llm_error] called")
     error_name = type(exc).__name__
     status_code = getattr(exc, "status_code", None)
 
@@ -49,10 +49,9 @@ def classify_llm_error(exc: Exception) -> str:
 
 def call_with_retries(model, messages):
     """Invoke `model`, retrying temporary failures up to MAX_ATTEMPTS times, 1s apart."""
-    print(f"[call_with_retries] called with model={model!r}, messages={messages!r}")
+    print("[call_with_retries] called")
     last_error = None
     for attempt in range(1, MAX_ATTEMPTS + 1):
-        print(f"[call_with_retries] attempt {attempt}/{MAX_ATTEMPTS}")
         try:
             response = model.invoke(messages)
             print(f"[call_with_retries] output: {response!r}")
@@ -78,7 +77,7 @@ def robust_invoke(messages):
     permanent failure, switch to the fallback provider, which gets the
     same retry treatment.
     """
-    print(f"[robust_invoke] called with messages={messages!r}")
+    print("[robust_invoke] called")
     try:
         response = call_with_retries(llm, messages)
         print(f"[robust_invoke] output: {response!r}")

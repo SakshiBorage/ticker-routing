@@ -47,7 +47,7 @@ class LLMProviderFactory:
 
     @classmethod
     def create(cls, provider: str, model: str, temperature: float = 0, **kwargs):
-        print(f"[LLMProviderFactory.create] called with provider={provider!r}, model={model!r}, temperature={temperature!r}, kwargs={kwargs!r}")
+        print("[LLMProviderFactory.create] called")
         provider_key = provider.strip().lower()
         importer = cls._PROVIDER_IMPORTERS.get(provider_key)
         if importer is None:
@@ -69,5 +69,5 @@ class LLMProviderFactory:
     @classmethod
     def register(cls, name: str, importer) -> None:
         """Register a new provider. `importer` is a zero-arg callable returning its chat model class."""
-        print(f"[LLMProviderFactory.register] called with name={name!r}, importer={importer!r}")
+        print(f"[LLMProviderFactory.register] called with name={name!r}")
         cls._PROVIDER_IMPORTERS[name.strip().lower()] = importer
