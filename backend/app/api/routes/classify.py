@@ -33,5 +33,6 @@ def classify_validated(request: TicketRequest, db: Session = Depends(get_db)):
         print(f"[classify_validated] output: raising HTTPException 400: {error!r}")
         raise HTTPException(status_code=400, detail=str(error))
     print(f"[classify_validated] output: {result!r}")
-    save_ticket_result(db, request.ticket, result)
+    if request.persist:
+        save_ticket_result(db, request.ticket, result)
     return result

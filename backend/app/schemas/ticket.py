@@ -54,3 +54,4 @@ def parse_and_validate(raw_output: str) -> TicketClassification:
 
 class TicketRequest(BaseModel):
     ticket: str
+    persist: bool = True

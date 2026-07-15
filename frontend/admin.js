@@ -1,5 +1,6 @@
 const API_BASE_URL = "http://127.0.0.1:8000";
 const TICKETS_ENDPOINT = `${API_BASE_URL}/admin/tickets`;
+const CLASSIFY_ENDPOINT = `${API_BASE_URL}/tickets/classify/validated`;
 
 const CATEGORY_TEAM_MAP = {
   flight_disruption: "Flight Operations & Rebooking",
@@ -28,6 +29,14 @@ let sortMode = "date-desc";
 let currentReviewId = null;
 let activePage = "tickets";
 let activeJiraFilter = "all";
+
+let benchManualTimerHandle = null;
+let benchManualStartedAt = null;
+let benchManualDone = false;
+let benchManualResult = null;
+let benchAiDone = false;
+let benchAiResult = null;
+let benchAiError = null;
 
 // ---------- helpers ----------
 
@@ -262,6 +271,7 @@ function switchPage(page) {
   activePage = page;
   document.getElementById("page-tickets").classList.toggle("hidden", page !== "tickets");
   document.getElementById("page-jira").classList.toggle("hidden", page !== "jira");
+  document.getElementById("page-benchmark").classList.toggle("hidden", page !== "benchmark");
   document.querySelectorAll(".page-tab").forEach((tab) => {
     tab.classList.toggle("active", tab.dataset.page === page);
   });
@@ -371,6 +381,165 @@ async function saveReview() {
   }
 }
 
+// ---------- manual vs AI benchmark ----------
+
+function formatSeconds(ms) {
+  return `${(ms / 1000).toFixed(1)}s`;
+}
+
+function startBenchmark() {
+  const ticketText = document.getElementById("bench-ticket-input").value.trim();
+  if (!ticketText) return;
+
+  benchManualDone = false;
+  benchManualResult = null;
+  benchAiDone = false;
+  benchAiResult = null;
+  benchAiError = null;
+
+  document.getElementById("bench-start-btn").disabled = true;
+  document.getElementById("bench-ticket-input").disabled = true;
+  document.getElementById("bench-result").classList.add("hidden");
+  document.getElementById("bench-waiting").classList.add("hidden");
+
+  const categorySelect = document.getElementById("bench-category");
+  populateCategoryOptions(categorySelect);
+  categorySelect.value = "";
+  categorySelect.disabled = false;
+
+  const teamSelect = document.getElementById("bench-team");
+  populateTeamOptions(teamSelect);
+  teamSelect.disabled = false;
+
+  document.getElementById("bench-priority").disabled = false;
+  document.getElementById("bench-priority").value = "";
+
+  const reasoningField = document.getElementById("bench-reasoning");
+  reasoningField.value = "";
+  reasoningField.disabled = false;
+
+  document.getElementById("bench-manual-fields").classList.remove("hidden");
+  const submitBtn = document.getElementById("bench-submit-btn");
+  submitBtn.disabled = false;
+  submitBtn.textContent = "Submit Manual";
+
+  benchManualStartedAt = Date.now();
+  const timerEl = document.getElementById("bench-manual-timer");
+  timerEl.textContent = "0.0s";
+  benchManualTimerHandle = setInterval(() => {
+    timerEl.textContent = formatSeconds(Date.now() - benchManualStartedAt);
+  }, 100);
+
+  // Fires immediately alongside the manual timer, but its result is held
+  // back and never rendered until the manual submission locks in - so the
+  // admin's manual answer can't be biased by seeing the AI's answer first.
+  const aiStartedAt = Date.now();
+  fetch(CLASSIFY_ENDPOINT, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ ticket: ticketText, persist: false }),
+  })
+    .then(async (response) => {
+      if (!response.ok) {
+        const errorBody = await response.json().catch(() => null);
+        throw new Error(errorBody?.detail || `Request failed with status ${response.status}`);
+      }
+      return response.json();
+    })
+    .then((result) => {
+      benchAiResult = result;
+      benchAiDone = true;
+      benchAiResult.duration_ms = Date.now() - aiStartedAt;
+      renderBenchmarkResultIfReady();
+    })
+    .catch((error) => {
+      console.error("AI classification failed:", error);
+      benchAiError = error.message || "AI classification failed.";
+      benchAiDone = true;
+      renderBenchmarkResultIfReady();
+    });
+}
+
+function submitBenchmarkManual() {
+  const category = document.getElementById("bench-category").value;
+  const priority = document.getElementById("bench-priority").value;
+  const team = document.getElementById("bench-team").value;
+  const reasoning = document.getElementById("bench-reasoning").value.trim();
+
+  if (!category || !priority || !team || !reasoning) {
+    showToast("Fill in category, priority, team, and reasoning before submitting.");
+    return;
+  }
+
+  clearInterval(benchManualTimerHandle);
+  const manualDurationMs = Date.now() - benchManualStartedAt;
+  document.getElementById("bench-manual-timer").textContent = formatSeconds(manualDurationMs);
+
+  benchManualResult = { category, priority, team, reasoning, duration_ms: manualDurationMs };
+  benchManualDone = true;
+
+  document.getElementById("bench-category").disabled = true;
+  document.getElementById("bench-priority").disabled = true;
+  document.getElementById("bench-team").disabled = true;
+  document.getElementById("bench-reasoning").disabled = true;
+  document.getElementById("bench-submit-btn").disabled = true;
+
+  if (!benchAiDone) {
+    document.getElementById("bench-waiting").classList.remove("hidden");
+  }
+  renderBenchmarkResultIfReady();
+}
+
+function priorityBadge(priority) {
+  return `<span class="badge badge-${priority}"><span class="badge-dot"></span>${priority}</span>`;
+}
+
+function renderBenchmarkResultIfReady() {
+  if (!benchManualDone || !benchAiDone) return;
+
+  document.getElementById("bench-waiting").classList.add("hidden");
+  document.getElementById("bench-result").classList.remove("hidden");
+
+  document.getElementById("bench-manual-time-out").textContent = formatSeconds(benchManualResult.duration_ms);
+  document.getElementById("bench-manual-category-out").textContent = categoryLabel(benchManualResult.category);
+  document.getElementById("bench-manual-priority-out").innerHTML = priorityBadge(benchManualResult.priority);
+  document.getElementById("bench-manual-team-out").textContent = benchManualResult.team;
+  document.getElementById("bench-manual-reasoning-out").textContent = benchManualResult.reasoning;
+
+  if (benchAiError) {
+    document.getElementById("bench-ai-time-out").textContent = "—";
+    document.getElementById("bench-ai-category-out").textContent = benchAiError;
+    document.getElementById("bench-ai-priority-out").textContent = "—";
+    document.getElementById("bench-ai-team-out").textContent = "—";
+    document.getElementById("bench-ai-reasoning-out").textContent = "—";
+    document.getElementById("bench-diff-summary").textContent = "AI classification failed for this run.";
+    return;
+  }
+
+  document.getElementById("bench-ai-time-out").textContent = formatSeconds(benchAiResult.duration_ms);
+  document.getElementById("bench-ai-category-out").textContent = categoryLabel(benchAiResult.category);
+  document.getElementById("bench-ai-priority-out").innerHTML = priorityBadge(benchAiResult.priority);
+  document.getElementById("bench-ai-team-out").textContent = benchAiResult.assigned_team;
+  document.getElementById("bench-ai-reasoning-out").textContent = benchAiResult.reasoning;
+
+  const diffMs = benchManualResult.duration_ms - benchAiResult.duration_ms;
+  const agree = benchManualResult.category === benchAiResult.category && benchManualResult.priority === benchAiResult.priority;
+  const faster = diffMs >= 0 ? "AI" : "Manual";
+  const diffText = formatSeconds(Math.abs(diffMs));
+  document.getElementById("bench-diff-summary").textContent =
+    `${faster} was ${diffText} faster. Category/priority ${agree ? "matched" : "did not match"}.`;
+}
+
+function resetBenchmark() {
+  document.getElementById("bench-ticket-input").value = "";
+  document.getElementById("bench-ticket-input").disabled = false;
+  document.getElementById("bench-start-btn").disabled = false;
+  document.getElementById("bench-manual-fields").classList.add("hidden");
+  document.getElementById("bench-waiting").classList.add("hidden");
+  document.getElementById("bench-result").classList.add("hidden");
+  document.getElementById("bench-manual-timer").textContent = "0.0s";
+}
+
 function showToast(message) {
   const toast = document.getElementById("toast");
   toast.textContent = message;
@@ -445,6 +614,17 @@ document.getElementById("jira-filter-tabs").addEventListener("click", (e) => {
   activeJiraFilter = btn.dataset.jiraFilter;
   renderJiraTable();
 });
+
+document.getElementById("bench-category").addEventListener("change", (e) => {
+  const team = CATEGORY_TEAM_MAP[e.target.value];
+  if (team) {
+    document.getElementById("bench-team").value = team;
+  }
+});
+
+document.getElementById("bench-start-btn").addEventListener("click", startBenchmark);
+document.getElementById("bench-submit-btn").addEventListener("click", submitBenchmarkManual);
+document.getElementById("bench-reset-btn").addEventListener("click", resetBenchmark);
 
 document.getElementById("panel-close").addEventListener("click", closeReviewPanel);
 document.getElementById("btn-cancel").addEventListener("click", closeReviewPanel);

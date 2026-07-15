@@ -7,6 +7,21 @@ const submitBtn = document.getElementById("submit-btn");
 const notification = document.getElementById("notification");
 const notificationMessage = document.getElementById("notification-message");
 const notificationClose = document.getElementById("notification-close");
+const testTicketSelect = document.getElementById("test-ticket-select");
+
+if (testTicketSelect && typeof TEST_TICKETS !== "undefined") {
+  TEST_TICKETS.forEach((testTicket, index) => {
+    const option = document.createElement("option");
+    option.value = index;
+    option.textContent = testTicket.label;
+    testTicketSelect.appendChild(option);
+  });
+
+  testTicketSelect.addEventListener("change", () => {
+    if (testTicketSelect.value === "") return;
+    input.value = TEST_TICKETS[Number(testTicketSelect.value)].text;
+  });
+}
 
 let hideTimeout = null;
 

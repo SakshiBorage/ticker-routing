@@ -234,6 +234,28 @@ textarea:focus {
   background: #fff;
 }
 
+label[for="test-ticket-select"] {
+  margin-top: 16px;
+}
+
+select#test-ticket-select {
+  width: 100%;
+  padding: 12px 14px;
+  font-size: 14px;
+  font-family: inherit;
+  border: 1px solid #d3dbe6;
+  border-radius: 10px;
+  background: #f9fbfd;
+  color: var(--navy);
+}
+
+select#test-ticket-select:focus {
+  outline: none;
+  border-color: var(--navy);
+  box-shadow: 0 0 0 3px rgba(11, 37, 69, 0.12);
+  background: #fff;
+}
+
 button#submit-btn {
   margin-top: 18px;
   width: 100%;

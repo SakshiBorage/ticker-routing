@@ -5,8 +5,14 @@ from pydantic import ValidationError
 
 from app.prompts.classification_prompt import SYSTEM_MESSAGE
 from app.schemas.ticket import FALLBACK_RESULT, parse_and_validate
+from app.services.relevance import IrrelevantTicketError, check_relevance
 from app.services.resilience import API_FAILURE_RESULT, PermanentFailure, TemporaryFailure, robust_invoke
 from app.services.validation import validate_input
+
+IRRELEVANT_TICKET_MESSAGE = (
+    "This message doesn't appear to be related to airline customer support. "
+    "Please submit a question about your booking, flight, baggage, payments, or account."
+)
 
 
 def build_messages(ticket: str):
@@ -24,6 +30,9 @@ def classify_ticket(ticket: str) -> dict:
     print("[classify_ticket] called")
     clean_ticket = validate_input(ticket)
 
+    if not check_relevance(clean_ticket):
+        raise IrrelevantTicketError(IRRELEVANT_TICKET_MESSAGE)
+
     messages = build_messages(clean_ticket)
 
     try:
@@ -40,6 +49,10 @@ def classify_ticket(ticket: str) -> dict:
 def robust_classify_ticket(ticket: str) -> dict:
     print("[robust_classify_ticket] called")
     clean_ticket = validate_input(ticket)
+
+    if not check_relevance(clean_ticket):
+        raise IrrelevantTicketError(IRRELEVANT_TICKET_MESSAGE)
+
     messages = build_messages(clean_ticket)
 
     # Attempt 1
