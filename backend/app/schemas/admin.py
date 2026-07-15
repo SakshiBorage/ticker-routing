@@ -1,5 +1,5 @@
 from datetime import datetime
-from typing import Literal
+from typing import Literal, Optional
 
 from pydantic import BaseModel
 
@@ -15,6 +15,9 @@ class TicketRecordOut(BaseModel):
     reasoning: str
     is_verified: bool
     created_at: datetime
+    jira_status: Optional[str] = None
+    jira_ticket_key: Optional[str] = None
+    jira_ticket_url: Optional[str] = None
 
     class Config:
         from_attributes = True
