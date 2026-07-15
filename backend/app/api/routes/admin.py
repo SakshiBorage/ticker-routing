@@ -52,6 +52,30 @@ def update_ticket(
     return record
 
 
+@router.post("/tickets/{ticket_id}/jira/retry", response_model=TicketRecordOut)
+def retry_jira_ticket(
+    ticket_id: int,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+):
+    record = db.query(TicketRecord).filter(TicketRecord.id == ticket_id).first()
+    if record is None:
+        raise HTTPException(status_code=404, detail="Ticket not found")
+
+    if record.jira_status == "created":
+        raise HTTPException(
+            status_code=400,
+            detail="This ticket already has a Jira ticket created.",
+        )
+
+    record.jira_status = "pending"
+    background_tasks.add_task(_create_jira_ticket_task, ticket_id)
+
+    db.commit()
+    db.refresh(record)
+    return record
+
+
 def _create_jira_ticket_task(ticket_id: int):
     """
     Runs after the verify response has already been sent. Opens its own DB

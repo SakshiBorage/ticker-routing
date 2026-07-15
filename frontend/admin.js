@@ -216,7 +216,7 @@ function renderJiraTable() {
         ? `<a href="${t.jira_ticket_url}" target="_blank" rel="noopener">${t.jira_ticket_key}</a>`
         : "—";
       const retryButton =
-        status === "failed"
+        status === "failed" || status === "pending"
           ? `<button class="review-btn" data-retry-id="${t.id}">Retry</button>`
           : `<button class="review-btn" disabled>Retry</button>`;
 
