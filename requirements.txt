@@ -7,4 +7,5 @@ ipykernel
 pydantic
 fastapi
 uvicorn[standard]
+sqlalchemy
 
