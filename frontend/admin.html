@@ -37,6 +37,7 @@
       Jira Sync
       <span id="jira-failed-count" class="page-tab-badge hidden">0</span>
     </button>
+    <button class="page-tab" data-page="benchmark">Manual vs AI</button>
   </nav>
 
   <main class="page" id="page-tickets">
@@ -127,6 +128,98 @@
         <tbody id="jira-tbody"></tbody>
       </table>
       <p id="jira-empty-state" class="empty-state hidden">No verified tickets yet.</p>
+    </div>
+
+  </main>
+
+  <main class="page hidden" id="page-benchmark">
+
+    <div class="page-heading">
+      <h1>Manual vs AI</h1>
+      <p>Classify the same ticket manually and see how long it took compared to the AI.</p>
+    </div>
+
+    <div class="toolbar">
+      <div class="field-group benchmark-input-group">
+        <label class="field-label">Ticket Text</label>
+        <textarea id="bench-ticket-input" rows="2" placeholder="Paste a passenger ticket to benchmark..."></textarea>
+      </div>
+      <div class="stat-pill stat-pill-light">
+        <span class="stat-pill-value" id="bench-manual-timer">0.0s</span>
+        <span class="stat-pill-label">Manual Time</span>
+      </div>
+      <button id="bench-start-btn" class="btn btn-primary">Start</button>
+    </div>
+
+    <div id="bench-manual-fields" class="table-wrap benchmark-form-card hidden">
+      <div class="field-row">
+        <div class="field-group">
+          <label class="field-label">Category</label>
+          <select id="bench-category" disabled></select>
+        </div>
+        <div class="field-group">
+          <label class="field-label">Priority</label>
+          <select id="bench-priority" disabled>
+            <option value="High">High</option>
+            <option value="Medium">Medium</option>
+            <option value="Low">Low</option>
+          </select>
+        </div>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Assigned Team</label>
+        <select id="bench-team" disabled></select>
+      </div>
+      <div class="field-group">
+        <label class="field-label">Reasoning</label>
+        <textarea id="bench-reasoning" rows="3" disabled></textarea>
+      </div>
+      <button id="bench-submit-btn" class="btn btn-primary" disabled>Submit Manual</button>
+    </div>
+
+    <p id="bench-waiting" class="empty-state hidden">Manual submitted — waiting on AI classification...</p>
+
+    <div id="bench-result" class="table-wrap benchmark-result hidden">
+      <table class="ticket-table">
+        <thead>
+          <tr>
+            <th>Metric</th>
+            <th>Manual</th>
+            <th>AI</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Time</td>
+            <td class="benchmark-time-cell" id="bench-manual-time-out"></td>
+            <td class="benchmark-time-cell" id="bench-ai-time-out"></td>
+          </tr>
+          <tr>
+            <td>Category</td>
+            <td id="bench-manual-category-out"></td>
+            <td id="bench-ai-category-out"></td>
+          </tr>
+          <tr>
+            <td>Priority</td>
+            <td id="bench-manual-priority-out"></td>
+            <td id="bench-ai-priority-out"></td>
+          </tr>
+          <tr>
+            <td>Team</td>
+            <td class="cell-team" id="bench-manual-team-out"></td>
+            <td class="cell-team" id="bench-ai-team-out"></td>
+          </tr>
+          <tr>
+            <td>Reasoning</td>
+            <td id="bench-manual-reasoning-out"></td>
+            <td id="bench-ai-reasoning-out"></td>
+          </tr>
+        </tbody>
+      </table>
+      <div class="benchmark-diff">
+        <span id="bench-diff-summary"></span>
+        <button id="bench-reset-btn" class="btn btn-ghost">Run Another</button>
+      </div>
     </div>
 
   </main>

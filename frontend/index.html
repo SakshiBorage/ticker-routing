@@ -41,6 +41,11 @@
           required
         ></textarea>
 
+        <label for="test-ticket-select" class="field-label">Try an example ticket</label>
+        <select id="test-ticket-select">
+          <option value="">-- Select an example --</option>
+        </select>
+
         <button type="submit" id="submit-btn">
           <span class="btn-label">Submit Ticket</span>
           <span class="btn-icon">✈</span>
@@ -56,6 +61,7 @@
     <button id="notification-close" aria-label="Dismiss">&times;</button>
   </div>
 
+  <script src="test-tickets.js"></script>
   <script src="script.js"></script>
 </body>
 </html>
