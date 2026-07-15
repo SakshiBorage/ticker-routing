@@ -3,10 +3,11 @@ from fastapi.middleware.cors import CORSMiddleware
 
 from app.api.routes.admin import router as admin_router
 from app.api.routes.classify import router as classify_router
-from app.db import Base, engine
+from app.db import Base, engine, sync_schema
 from app import models  # noqa: F401 - registers TicketRecord with Base.metadata
 
 Base.metadata.create_all(bind=engine)
+sync_schema()
 
 app = FastAPI(title="Ticket Routing API")
 

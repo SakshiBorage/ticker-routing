@@ -26,6 +26,8 @@ let activePriorityFilter = "all";
 let searchQuery = "";
 let sortMode = "date-desc";
 let currentReviewId = null;
+let activePage = "tickets";
+let activeJiraFilter = "all";
 
 // ---------- helpers ----------
 
@@ -80,6 +82,29 @@ async function loadTickets() {
   } catch (error) {
     console.error("Failed to load tickets:", error);
     showToast("Could not load tickets from the server.");
+  }
+}
+
+async function refreshTicket(id) {
+  try {
+    const response = await fetch(`${TICKETS_ENDPOINT}`);
+    if (!response.ok) return;
+    const latest = await response.json();
+    const updated = latest.find((t) => t.id === id);
+    if (!updated) return;
+
+    const index = tickets.findIndex((t) => t.id === id);
+    if (index === -1) return;
+    tickets[index] = updated;
+    renderAll();
+
+    if (updated.jira_status === "created") {
+      showToast(`Jira ticket ${updated.jira_ticket_key} created for #${updated.id}.`);
+    } else if (updated.jira_status === "failed") {
+      showToast(`Jira ticket creation failed for #${updated.id}.`);
+    }
+  } catch (error) {
+    console.error("Failed to refresh ticket:", error);
   }
 }
 
@@ -147,9 +172,106 @@ function renderTable() {
   });
 }
 
+function jiraStatusLabel(status) {
+  if (status === "pending") return "Pending";
+  if (status === "created") return "Created";
+  if (status === "failed") return "Failed";
+  return "—";
+}
+
+function jiraStatusBadgeClass(status) {
+  if (status === "pending") return "badge-pending";
+  if (status === "created") return "badge-verified";
+  if (status === "failed") return "badge-failed";
+  return "badge-pending";
+}
+
+function getFilteredJiraTickets() {
+  const verifiedOnly = tickets.filter((t) => t.is_verified);
+  if (activeJiraFilter === "all") return verifiedOnly;
+  return verifiedOnly.filter((t) => (t.jira_status || "pending") === activeJiraFilter);
+}
+
+function renderJiraTable() {
+  const rows = getFilteredJiraTickets();
+  const tbody = document.getElementById("jira-tbody");
+  const emptyState = document.getElementById("jira-empty-state");
+
+  const failedCount = tickets.filter((t) => t.jira_status === "failed").length;
+  const failedBadge = document.getElementById("jira-failed-count");
+  failedBadge.textContent = failedCount;
+  failedBadge.classList.toggle("hidden", failedCount === 0);
+
+  if (rows.length === 0) {
+    tbody.innerHTML = "";
+    emptyState.classList.remove("hidden");
+    return;
+  }
+
+  emptyState.classList.add("hidden");
+  tbody.innerHTML = rows
+    .map((t) => {
+      const status = t.jira_status || "pending";
+      const ticketCell = t.jira_ticket_key
+        ? `<a href="${t.jira_ticket_url}" target="_blank" rel="noopener">${t.jira_ticket_key}</a>`
+        : "—";
+      const retryButton =
+        status === "failed" || status === "pending"
+          ? `<button class="review-btn" data-retry-id="${t.id}">Retry</button>`
+          : `<button class="review-btn" disabled>Retry</button>`;
+
+      return `
+        <tr data-id="${t.id}">
+          <td class="cell-id">#${t.id}</td>
+          <td>${categoryLabel(t.category)}</td>
+          <td class="cell-team">${t.assigned_team}</td>
+          <td class="cell-date">${formatDate(t.created_at)}</td>
+          <td>
+            <span class="badge ${jiraStatusBadgeClass(status)}">
+              <span class="badge-dot"></span>${jiraStatusLabel(status)}
+            </span>
+          </td>
+          <td>${ticketCell}</td>
+          <td>${retryButton}</td>
+        </tr>`;
+    })
+    .join("");
+
+  document.querySelectorAll("[data-retry-id]").forEach((btn) => {
+    btn.addEventListener("click", () => retryJiraTicket(Number(btn.dataset.retryId)));
+  });
+}
+
+async function retryJiraTicket(id) {
+  // Placeholder call to a retry endpoint that doesn't exist on the backend
+  // yet - wiring it up here so the UI is ready as soon as it's added.
+  try {
+    const response = await fetch(`${TICKETS_ENDPOINT}/${id}/jira/retry`, { method: "POST" });
+    if (!response.ok) {
+      throw new Error(`Request failed with status ${response.status}`);
+    }
+    showToast(`Retrying Jira ticket creation for #${id}...`);
+    setTimeout(() => refreshTicket(id), 2000);
+  } catch (error) {
+    console.error("Failed to retry Jira ticket:", error);
+    showToast("Retry endpoint isn't available yet.");
+  }
+}
+
+function switchPage(page) {
+  activePage = page;
+  document.getElementById("page-tickets").classList.toggle("hidden", page !== "tickets");
+  document.getElementById("page-jira").classList.toggle("hidden", page !== "jira");
+  document.querySelectorAll(".page-tab").forEach((tab) => {
+    tab.classList.toggle("active", tab.dataset.page === page);
+  });
+  if (page === "jira") renderJiraTable();
+}
+
 function renderAll() {
   renderStats();
   renderTable();
+  renderJiraTable();
 }
 
 // ---------- review panel ----------
@@ -234,7 +356,13 @@ async function saveReview() {
 
     closeReviewPanel();
     renderAll();
-    showToast(`Ticket #${updated.id} verified.`);
+    showToast(`Ticket #${updated.id} verified. Creating Jira ticket...`);
+
+    // Jira ticket creation runs in the background on the server, so the
+    // PATCH response above never has the result yet. One delayed refetch
+    // (not a polling loop) is enough to pick up jira_status/jira_ticket_key
+    // once that background task finishes.
+    setTimeout(() => refreshTicket(updated.id), 2000);
   } catch (error) {
     console.error("Failed to save ticket:", error);
     showToast(error.message || "Could not save changes.");
@@ -301,6 +429,21 @@ document.getElementById("field-category").addEventListener("change", (e) => {
   if (team) {
     document.getElementById("field-team").value = team;
   }
+});
+
+document.getElementById("page-tabs").addEventListener("click", (e) => {
+  const btn = e.target.closest(".page-tab");
+  if (!btn) return;
+  switchPage(btn.dataset.page);
+});
+
+document.getElementById("jira-filter-tabs").addEventListener("click", (e) => {
+  const btn = e.target.closest(".filter-tab");
+  if (!btn) return;
+  document.querySelectorAll("#jira-filter-tabs .filter-tab").forEach((b) => b.classList.remove("active"));
+  btn.classList.add("active");
+  activeJiraFilter = btn.dataset.jiraFilter;
+  renderJiraTable();
 });
 
 document.getElementById("panel-close").addEventListener("click", closeReviewPanel);

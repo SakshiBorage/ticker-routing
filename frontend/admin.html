@@ -31,7 +31,15 @@
     </div>
   </header>
 
-  <main class="page">
+  <nav class="page-tabs" id="page-tabs">
+    <button class="page-tab active" data-page="tickets">Ticket Review Queue</button>
+    <button class="page-tab" data-page="jira">
+      Jira Sync
+      <span id="jira-failed-count" class="page-tab-badge hidden">0</span>
+    </button>
+  </nav>
+
+  <main class="page" id="page-tickets">
 
     <div class="page-heading">
       <h1>Ticket Review Queue</h1>
@@ -83,6 +91,42 @@
         <tbody id="ticket-tbody"></tbody>
       </table>
       <p id="empty-state" class="empty-state hidden">No tickets match the current filters.</p>
+    </div>
+
+  </main>
+
+  <main class="page hidden" id="page-jira">
+
+    <div class="page-heading">
+      <h1>Jira Sync</h1>
+      <p>Track Jira ticket creation for verified tickets, and retry any that failed.</p>
+    </div>
+
+    <div class="toolbar">
+      <div class="filter-tabs" id="jira-filter-tabs">
+        <button class="filter-tab active" data-jira-filter="all">All</button>
+        <button class="filter-tab" data-jira-filter="pending">Pending</button>
+        <button class="filter-tab" data-jira-filter="created">Created</button>
+        <button class="filter-tab" data-jira-filter="failed">Failed</button>
+      </div>
+    </div>
+
+    <div class="table-wrap">
+      <table class="ticket-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Category</th>
+            <th>Team</th>
+            <th>Verified</th>
+            <th>Jira Status</th>
+            <th>Jira Ticket</th>
+            <th></th>
+          </tr>
+        </thead>
+        <tbody id="jira-tbody"></tbody>
+      </table>
+      <p id="jira-empty-state" class="empty-state hidden">No verified tickets yet.</p>
     </div>
 
   </main>

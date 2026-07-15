@@ -14,3 +14,10 @@ class TicketRecord(Base):
     reasoning = Column(Text, nullable=False)
     is_verified = Column(Boolean, nullable=False, default=False, server_default="0")
     created_at = Column(DateTime(timezone=True), server_default=func.now())
+
+    # Jira sync state: None until verification first triggers ticket creation,
+    # then "pending" -> "created"/"failed". Kept independent of is_verified so
+    # a Jira outage never blocks or rolls back the verification itself.
+    jira_status = Column(Text, nullable=True)
+    jira_ticket_key = Column(Text, nullable=True)
+    jira_ticket_url = Column(Text, nullable=True)
